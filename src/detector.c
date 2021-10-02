@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <libgen.h>
 #include "darknet.h"
 #include "network.h"
 #include "region_layer.h"
@@ -1093,7 +1094,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
 
                 truth_dif = read_boxes(labelpath_dif, &num_labels_dif);
             }
-
+		
             const int checkpoint_detections_count = detections_count;
 
             int i;
@@ -1163,6 +1164,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
                             else{
                                 fp_for_thresh++;
                                 fp_for_thresh_per_class[class_id]++;
+				printf("image: %d - FP Bbox: %2.4f %2.4f %2.4f %2.4f \n", image_index, dets[i].bbox.x, dets[i].bbox.y, dets[i].bbox.w, dets[i].bbox.h);
                             }
                         }
                     }
@@ -1692,10 +1694,32 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
             else diounms_sort(dets, nboxes, l.classes, nms, l.nms_kind, l.beta_nms);
         }
         draw_detections_v3(im, dets, nboxes, thresh, names, alphabet, l.classes, ext_output);
-        save_image(im, "predictions");
-        if (!dont_show) {
-            show_image(im, "predictions");
-        }
+	
+	// Change name to image file output
+	// Create by: Lucas Ferrari de Oliveira
+	// September 30 2021
+	
+	char *path;
+	char *path_new;
+	int l2;
+	
+	path = basename(input);
+	l2 = strlen(path);
+	path_new = malloc(l2+12);
+	strncpy(path_new, path, l2-4);
+	path_new[l2-4] = '\0';
+	strcat(path_new, "_predictions");
+	
+	save_image(im, path_new);
+
+	if (!dont_show)
+	      show_image(im, path_new);
+	// end  
+	
+	//save_image(im, "predictions");
+        //if (!dont_show) {
+        //    show_image(im, "predictions");
+        //}
 
         if (json_file) {
             if (json_buf) {
